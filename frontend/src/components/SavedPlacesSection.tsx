@@ -12,8 +12,8 @@ const shapeOptions: { value: PrecomputeShape; label: string }[] = [
   { value: 'heart', label: '하트' },
   { value: 'star', label: '별' },
   { value: 'square', label: '사각형' },
-  { value: 'dog', label: '강아지 얼굴' },
-  { value: 'cat', label: '고양이 얼굴' },
+  { value: 'dog', label: '강아지' },
+  { value: 'cat', label: '고양이' },
 ];
 
 function progressLabel(status: { queued: number; running: number; succeeded: number; failed: number }) {

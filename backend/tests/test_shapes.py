@@ -4,10 +4,11 @@ import itertools
 import math
 
 import pytest
+from shapely.geometry import LinearRing
 
 from app.errors import AppError
 from app.services.shapes.freehand import normalize_freehand
-from app.services.shapes.library import generate_shape, resample_by_length
+from app.services.shapes.library import cat, dog, generate_shape, resample_by_length
 
 
 @pytest.mark.parametrize("shape", ["heart", "star", "circle", "square", "dog", "cat"])
@@ -16,6 +17,13 @@ def test_shapes_are_finite_closed_and_normalized(shape: str) -> None:
     assert len(points) == 65
     assert points[0] == points[-1]
     assert all(0 <= value <= 1 and math.isfinite(value) for point in points for value in point)
+
+
+@pytest.mark.parametrize("outline", [dog(), cat()])
+def test_animal_outlines_do_not_cross_or_retrace(outline: list[tuple[float, float]]) -> None:
+    ring = LinearRing(outline)
+    assert ring.is_simple
+    assert ring.is_valid
 
 
 def test_resampling_has_nearly_equal_segments() -> None:

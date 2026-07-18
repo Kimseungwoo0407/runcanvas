@@ -88,8 +88,8 @@ const shapes: { value: ShapeType; label: string }[] = [
   { value: 'star', label: '별' },
   { value: 'circle', label: '원' },
   { value: 'square', label: '사각형' },
-  { value: 'dog', label: '강아지 얼굴' },
-  { value: 'cat', label: '고양이 얼굴' },
+  { value: 'dog', label: '강아지' },
+  { value: 'cat', label: '고양이' },
   { value: 'letter', label: '글자' },
   { value: 'freehand', label: '직접 그리기' },
 ];

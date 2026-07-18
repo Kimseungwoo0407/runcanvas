@@ -11,8 +11,8 @@ const shapeName: Record<string, string> = {
   star: '별',
   circle: '원',
   square: '사각형',
-  dog: '강아지 얼굴',
-  cat: '고양이 얼굴',
+  dog: '강아지',
+  cat: '고양이',
   letter: '글자',
   freehand: '자유 드로잉',
 };

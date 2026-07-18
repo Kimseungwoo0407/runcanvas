@@ -96,7 +96,12 @@ async def optimize_candidates(
         freehand_points=request.freehand_points,
         preview_count=180,
     )
-    waypoint_count = request.waypoint_count or (14 if request.shape_type in {"heart", "letter", "freehand"} else 12)
+    if request.waypoint_count is not None:
+        waypoint_count = request.waypoint_count
+    elif request.shape_type in {"dog", "cat"}:
+        waypoint_count = 16
+    else:
+        waypoint_count = 14 if request.shape_type in {"heart", "letter", "freehand"} else 12
     waypoint_shape = resample_by_length(source_shape, waypoint_count, closed=True)
     normalized_length = polyline_length(waypoint_shape)
     target_m = request.target_distance_km * 1000
