@@ -1,0 +1,4 @@
+data
+*.osm.pbf
+graph-cache
+elevation-cache

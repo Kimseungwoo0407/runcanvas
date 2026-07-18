@@ -1,0 +1,125 @@
+name: runcanvas
+
+services:
+  db-init:
+    build:
+      context: ./backend
+    user: "0:0"
+    command: sh -c "mkdir -p /app/storage/db && chown -R 10001:10001 /app/storage/db"
+    volumes:
+      - runcanvas-db:/app/storage/db
+    restart: "no"
+    networks: [runcanvas]
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file: .env
+    command: sh -c 'alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips="*"'
+    ports:
+      - "8000:8000"
+    volumes:
+      - runcanvas-db:/app/storage/db
+      - ./storage/exports:/app/storage/exports
+      - ./storage/backups:/app/storage/backups
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+      graphhopper:
+        condition: service_healthy
+    networks: [runcanvas]
+
+  worker:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+    env_file: .env
+    command: python -m app.workers.runner
+    volumes:
+      - runcanvas-db:/app/storage/db
+      - ./storage/exports:/app/storage/exports
+      - ./storage/backups:/app/storage/backups
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+      graphhopper:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks: [runcanvas]
+
+  graphhopper:
+    build:
+      context: ./routing
+      args:
+        GRAPHHOPPER_VERSION: "11.0"
+    restart: unless-stopped
+    volumes:
+      - ./routing/data:/data
+    expose:
+      - "8989"
+    ports:
+      - "127.0.0.1:8989:8989"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8989/info"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 180s
+    networks: [runcanvas]
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN}
+    depends_on: [backend]
+    networks: [runcanvas]
+
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ai"]
+    restart: unless-stopped
+    volumes:
+      - ollama-models:/root/.ollama
+    environment:
+      OLLAMA_KEEP_ALIVE: 30m
+      OLLAMA_MAX_LOADED_MODELS: 1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks: [runcanvas]
+
+  frontend:
+    image: node:24-alpine
+    profiles: ["dev"]
+    working_dir: /workspace
+    command: sh -c "npm ci --no-audit --no-fund && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/workspace
+      - frontend-node-modules:/workspace/node_modules
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000/api/v1
+      VITE_MAP_STYLE_URL: https://tiles.openfreemap.org/styles/liberty
+      VITE_REPOSITORY_NAME: runcanvas
+    networks: [runcanvas]
+
+volumes:
+  runcanvas-db:
+  ollama-models:
+  frontend-node-modules:
+
+networks:
+  runcanvas:
+    driver: bridge

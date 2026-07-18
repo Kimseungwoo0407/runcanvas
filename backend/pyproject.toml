@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=80.9"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "runcanvas-backend"
+version = "1.0.0"
+description = "RunCanvas GPS art course generation API"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi==0.139.0",
+  "uvicorn[standard]==0.51.0",
+  "sqlalchemy==2.0.51",
+  "pydantic==2.13.4",
+  "pydantic-settings==2.14.2",
+  "alembic==1.18.5",
+  "argon2-cffi==25.1.0",
+  "PyJWT==2.13.0",
+  "httpx==0.28.1",
+  "shapely==2.1.2",
+  "pyproj==3.7.2",
+  "numpy==2.5.1",
+  "gpxpy==1.6.2",
+  "structlog==26.1.0",
+  "python-multipart==0.0.22",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==9.1.1",
+  "pytest-asyncio==1.4.0",
+  "respx==0.23.1",
+  "ruff==0.15.21",
+  "mypy==2.3.0",
+  "types-PyJWT==1.7.1",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --disable-warnings --strict-markers"
+asyncio_mode = "auto"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "S", "RUF"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S105", "S106", "S108"]
+"app/config.py" = ["S105"]
+"app/schemas/auth.py" = ["S105"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
+exclude = ["alembic"]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+warn_required_dynamic_aliases = true

@@ -1,0 +1,19 @@
+{
+  "distance_influence": 15,
+  "speed": [
+    {
+      "if": "true",
+      "limit_to": "foot_average_speed"
+    }
+  ],
+  "priority": [
+    {
+      "if": "foot_access == false",
+      "multiply_by": "0.0"
+    },
+    {
+      "if": "road_class == MOTORWAY || road_class == TRUNK",
+      "multiply_by": "0.0"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+graphhopper:
+  datareader.file: /data/seoul.osm.pbf
+  graph.location: /data/graph-cache
+
+  profiles:
+    - name: foot
+      custom_model_files: [runcanvas-foot.json]
+
+  profiles_ch: []
+  profiles_lm:
+    - profile: foot
+
+  graph.encoded_values: foot_access, foot_average_speed, road_access, road_class, road_environment, surface
+  import.osm.ignored_highways: motorway,trunk
+  prepare.min_network_size: 200
+  prepare.subnetworks.threads: 1
+  prepare.lm.threads: 1
+  routing.max_visited_nodes: 1000000
+  routing.timeout_ms: 15000
+  routing.non_ch.max_waypoint_distance: 50000
+  routing.snap_preventions_default: ferry
+  graph.dataaccess.default_type: RAM_STORE
+
+server:
+  application_connectors:
+    - type: http
+      port: 8989
+      bind_host: 0.0.0.0
+  admin_connectors:
+    - type: http
+      port: 8990
+      bind_host: 0.0.0.0
+  request_log:
+    appenders: []
+
+logging:
+  level: INFO
+  appenders:
+    - type: console
+      time_zone: UTC

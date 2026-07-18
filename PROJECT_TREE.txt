@@ -1,0 +1,195 @@
+runcanvas/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml
+│       └── pages.yml
+├── backend/
+│   ├── alembic/
+│   │   ├── versions/
+│   │   │   └── 20260715_0001_initial.py
+│   │   ├── env.py
+│   │   └── script.py.mako
+│   ├── app/
+│   │   ├── db/
+│   │   │   ├── __init__.py
+│   │   │   ├── models.py
+│   │   │   └── session.py
+│   │   ├── models/
+│   │   │   └── __init__.py
+│   │   ├── repositories/
+│   │   │   ├── __init__.py
+│   │   │   ├── courses.py
+│   │   │   ├── jobs.py
+│   │   │   └── users.py
+│   │   ├── routers/
+│   │   │   ├── __init__.py
+│   │   │   ├── admin.py
+│   │   │   ├── ai.py
+│   │   │   ├── auth.py
+│   │   │   ├── courses.py
+│   │   │   ├── generation.py
+│   │   │   ├── geocoding.py
+│   │   │   ├── health.py
+│   │   │   ├── me.py
+│   │   │   └── routes.py
+│   │   ├── schemas/
+│   │   │   ├── __init__.py
+│   │   │   ├── admin.py
+│   │   │   ├── ai.py
+│   │   │   ├── auth.py
+│   │   │   ├── common.py
+│   │   │   ├── course.py
+│   │   │   ├── generation.py
+│   │   │   ├── geocoding.py
+│   │   │   └── user.py
+│   │   ├── services/
+│   │   │   ├── ai/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── base.py
+│   │   │   │   ├── ollama.py
+│   │   │   │   ├── rules.py
+│   │   │   │   └── service.py
+│   │   │   ├── gpx/
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── exporter.py
+│   │   │   ├── optimization/
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── optimizer.py
+│   │   │   ├── routing/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── base.py
+│   │   │   │   ├── factory.py
+│   │   │   │   ├── geometry.py
+│   │   │   │   ├── graphhopper.py
+│   │   │   │   └── mock.py
+│   │   │   ├── scoring/
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── metrics.py
+│   │   │   ├── shapes/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── freehand.py
+│   │   │   │   └── library.py
+│   │   │   ├── auth.py
+│   │   │   ├── course.py
+│   │   │   ├── generation.py
+│   │   │   └── geocoding.py
+│   │   ├── workers/
+│   │   │   ├── __init__.py
+│   │   │   └── runner.py
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── db_backup.py
+│   │   ├── db_check.py
+│   │   ├── db_restore.py
+│   │   ├── dependencies.py
+│   │   ├── errors.py
+│   │   ├── logging.py
+│   │   ├── main.py
+│   │   ├── middleware.py
+│   │   ├── security.py
+│   │   └── seed.py
+│   ├── tests/
+│   │   ├── conftest.py
+│   │   ├── test_api_auth.py
+│   │   ├── test_api_courses.py
+│   │   ├── test_api_generation.py
+│   │   ├── test_config.py
+│   │   ├── test_cors.py
+│   │   ├── test_geometry.py
+│   │   ├── test_gpx.py
+│   │   ├── test_scoring.py
+│   │   └── test_shapes.py
+│   ├── .dockerignore
+│   ├── alembic.ini
+│   ├── Dockerfile
+│   └── pyproject.toml
+├── docs/
+│   ├── algorithm.md
+│   ├── api.md
+│   ├── architecture.md
+│   ├── decisions.md
+│   ├── operations.md
+│   ├── RunCanvas_개발명세서_v1.1.docx
+│   ├── threat-model.md
+│   └── validation.md
+├── frontend/
+│   ├── src/
+│   │   ├── api/
+│   │   │   ├── client.ts
+│   │   │   └── endpoints.ts
+│   │   ├── app/
+│   │   │   ├── App.tsx
+│   │   │   ├── Layout.tsx
+│   │   │   └── ProtectedRoute.tsx
+│   │   ├── components/
+│   │   │   ├── FreehandCanvas.tsx
+│   │   │   ├── LoadingBlock.tsx
+│   │   │   ├── MetricsGrid.test.tsx
+│   │   │   ├── MetricsGrid.tsx
+│   │   │   └── ShapePreview.tsx
+│   │   ├── features/
+│   │   │   └── auth/
+│   │   │       ├── store.test.ts
+│   │   │       └── store.ts
+│   │   ├── map/
+│   │   │   └── CourseMap.tsx
+│   │   ├── pages/
+│   │   │   ├── AdminPage.tsx
+│   │   │   ├── BuilderPage.tsx
+│   │   │   ├── CoursePage.tsx
+│   │   │   ├── DashboardPage.tsx
+│   │   │   ├── JobPage.tsx
+│   │   │   ├── LoginPage.tsx
+│   │   │   ├── SettingsPage.tsx
+│   │   │   └── SharedCoursePage.tsx
+│   │   ├── types/
+│   │   │   └── api.ts
+│   │   ├── utils/
+│   │   │   ├── error.ts
+│   │   │   ├── format.test.ts
+│   │   │   ├── format.ts
+│   │   │   ├── shapes.test.ts
+│   │   │   └── shapes.ts
+│   │   ├── main.tsx
+│   │   ├── styles.css
+│   │   ├── test-setup.ts
+│   │   └── vite-env.d.ts
+│   ├── tests/
+│   │   └── app.spec.ts
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── playwright.config.ts
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+├── routing/
+│   ├── data/
+│   │   └── .gitkeep
+│   ├── .dockerignore
+│   ├── Dockerfile
+│   ├── foot.json
+│   └── graphhopper.yml
+├── scripts/
+│   ├── backup_db.sh
+│   ├── download_seoul_osm.sh
+│   ├── restore_db.sh
+│   └── smoke_graphhopper.sh
+├── storage/
+│   ├── backups/
+│   │   └── .gitkeep
+│   └── exports/
+│       └── .gitkeep
+├── .dockerignore
+├── .env.example
+├── .gitignore
+├── .nvmrc
+├── .python-version
+├── docker-compose.yml
+├── LICENSE
+├── Makefile
+├── MANIFEST.sha256
+├── PROJECT_TREE.txt
+└── README.md
