@@ -66,7 +66,7 @@ test('builder inputs survive a reload', async ({ page }) => {
   await page.getByPlaceholder('잠실종합운동장').fill('여의나루역');
   await page.getByLabel('목표 거리 (km)').fill('8');
   await page.getByText('고급 설정', { exact: true }).click();
-  await page.getByLabel('한강·강변 강하게 선호').check();
+  await page.getByLabel('강변 경로 강하게 선호').check();
   await expect
     .poll(() => page.evaluate(() => window.localStorage.getItem('runcanvas.builder-draft.v1')))
     .toContain('"preferRiverside":true');
