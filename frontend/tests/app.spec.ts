@@ -74,5 +74,5 @@ test('builder inputs survive a reload', async ({ page }) => {
   await page.reload();
   await expect(page.getByPlaceholder('잠실종합운동장')).toHaveValue('여의나루역');
   await expect(page.getByLabel('목표 거리 (km)')).toHaveValue('8');
-  await expect(page.getByLabel('한강·강변 강하게 선호')).toBeChecked();
+  await expect(page.getByLabel('강변 경로 강하게 선호')).toBeChecked();
 });
