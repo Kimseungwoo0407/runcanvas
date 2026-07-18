@@ -20,6 +20,7 @@ storage/backups/*
 !storage/backups/.gitkeep
 routing/data/*.osm.pbf
 routing/data/graph-cache/
+routing/data/graph-cache-*/
 routing/data/elevation-cache/
 .DS_Store
 .vscode/

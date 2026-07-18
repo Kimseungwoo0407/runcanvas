@@ -10,11 +10,11 @@ from app.schemas.ai import ParsedRequest
 SYSTEM_PROMPT = """You convert a Korean or English running-course request into the supplied JSON Schema.
 Only extract explicit user intent. Never invent coordinates.
 locationText may contain a place name, never latitude or longitude.
-Map shapes to heart, star, circle, square, letter, or freehand.
+Map shapes to heart, star, circle, square, dog, cat, letter, or freehand. Dog and cat mean face-only shapes.
 Distances are kilometers from 1 to 30.
 Set avoidMajorRoads true unless the user explicitly prefers large roads.
 Set preferFootways true for paths, parks, trails, or quiet walking roads.
-Set preferRiverside true when the user mentions the Han River, riverside, river parks, or river paths.
+Set preferRiverside true when the user mentions the Han River, Musimcheon, riverside, river parks, or river paths.
 """
 
 

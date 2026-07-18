@@ -13,6 +13,7 @@ import type {
   RoutingHealth,
   SavedPlace,
   SavedPlaceCreateRequest,
+  SupportedRegion,
 } from '../types/api';
 
 export const authApi = {
@@ -83,8 +84,10 @@ export const courseApi = {
 };
 
 export const geocodingApi = {
-  search: (query: string) =>
-    apiRequest<{ items: GeocodingResult[] }>(`/geocoding/search?q=${encodeURIComponent(query)}`),
+  search: (query: string, region?: SupportedRegion) =>
+    apiRequest<{ items: GeocodingResult[] }>(
+      `/geocoding/search?q=${encodeURIComponent(query)}${region ? `&region=${region}` : ''}`,
+    ),
 };
 
 export const savedPlaceApi = {

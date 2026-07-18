@@ -14,7 +14,7 @@ from app.services.routing.base import (
     RouteResult,
 )
 from app.services.routing.geometry import haversine_m
-from app.services.routing.han_river import HAN_RIVER_CORRIDOR
+from app.services.routing.han_river import RIVERSIDE_CORRIDORS
 
 logger = structlog.get_logger()
 
@@ -56,17 +56,21 @@ class GraphHopperRoutingProvider:
         if options.prefer_riverside:
             priority.extend(
                 [
-                    {"if": "!in_han_river_corridor", "multiply_by": "0.45"},
+                    {
+                        "if": "!in_han_river_corridor && !in_musimcheon_corridor",
+                        "multiply_by": "0.45",
+                    },
                     {
                         "if": (
-                            "in_han_river_corridor && road_class != PATH && road_class != FOOTWAY "
+                            "(in_han_river_corridor || in_musimcheon_corridor) "
+                            "&& road_class != PATH && road_class != FOOTWAY "
                             "&& road_class != PEDESTRIAN && road_class != LIVING_STREET"
                         ),
                         "multiply_by": "0.75",
                     },
                 ]
             )
-            model["areas"] = HAN_RIVER_CORRIDOR
+            model["areas"] = RIVERSIDE_CORRIDORS
         return model
 
     async def route(self, points: list[LngLat], options: RouteOptions | None = None) -> RouteResult:

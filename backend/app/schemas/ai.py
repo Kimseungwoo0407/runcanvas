@@ -12,7 +12,7 @@ class NaturalLanguageRequest(APIModel):
 
 
 class ParsedRequest(APIModel):
-    shape_type: Literal["heart", "star", "circle", "square", "letter", "freehand"]
+    shape_type: Literal["heart", "star", "circle", "square", "dog", "cat", "letter", "freehand"]
     target_distance_km: float = Field(ge=1, le=30)
     avoid_major_roads: bool = True
     prefer_footways: bool = False

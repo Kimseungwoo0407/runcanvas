@@ -87,3 +87,18 @@ def test_registration_password_minimum_is_eight_characters(
         json={"username": "eight-pass", "password": "12345678", "inviteCode": admin_and_invite[1]},
     )
     assert accepted.status_code == 201
+
+
+def test_registration_returns_readable_error_for_invalid_username(
+    client: TestClient, admin_and_invite: tuple[object, str]
+) -> None:
+    response = client.post(
+        "/api/v1/auth/register",
+        json={"username": "한글이름", "password": "12345678", "inviteCode": admin_and_invite[1]},
+    )
+
+    assert response.status_code == 422
+    payload = response.json()
+    assert payload["code"] == "VALIDATION_ERROR"
+    assert "영문자" in payload["message"]
+    assert payload["details"]["errors"][0]["ctx"]["error"]

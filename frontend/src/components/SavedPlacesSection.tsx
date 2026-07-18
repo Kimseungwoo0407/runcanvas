@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { geocodingApi, savedPlaceApi } from '../api/endpoints';
+import { isPointInRegion, regionOptions, regions } from '../config/regions';
 import { CourseMap } from '../map/CourseMap';
-import type { GeocodingResult, LngLat, PrecomputeShape, SavedPlaceCreateRequest } from '../types/api';
+import type { GeocodingResult, LngLat, PrecomputeShape, SavedPlaceCreateRequest, SupportedRegion } from '../types/api';
 import { errorMessage } from '../utils/error';
 
 const distanceOptions = [3, 5, 7, 10];
@@ -11,6 +12,8 @@ const shapeOptions: { value: PrecomputeShape; label: string }[] = [
   { value: 'heart', label: '하트' },
   { value: 'star', label: '별' },
   { value: 'square', label: '사각형' },
+  { value: 'dog', label: '강아지 얼굴' },
+  { value: 'cat', label: '고양이 얼굴' },
 ];
 
 function progressLabel(status: { queued: number; running: number; succeeded: number; failed: number }) {
@@ -22,6 +25,7 @@ function progressLabel(status: { queued: number; running: number; succeeded: num
 
 export function SavedPlacesSection() {
   const queryClient = useQueryClient();
+  const [region, setRegion] = useState<SupportedRegion>('seoul');
   const [name, setName] = useState('집 근처');
   const [address, setAddress] = useState('');
   const [location, setLocation] = useState<LngLat | null>(null);
@@ -38,7 +42,8 @@ export function SavedPlacesSection() {
     refetchInterval: 5000,
   });
   const geocode = useMutation({
-    mutationFn: geocodingApi.search,
+    mutationFn: ({ query, selectedRegion }: { query: string; selectedRegion: SupportedRegion }) =>
+      geocodingApi.search(query, selectedRegion),
     onSuccess: (data) => setSearchResults(data.items),
   });
   const refresh = () => {
@@ -68,6 +73,21 @@ export function SavedPlacesSection() {
       current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
     );
   };
+  const selectLocation = (point: LngLat) => {
+    if (!isPointInRegion(point, region)) {
+      setLocationError(`${regions[region].label} 지원 범위 안에서 위치를 선택해 주세요.`);
+      return;
+    }
+    setLocationError(null);
+    setLocation(point);
+  };
+  const changeRegion = (nextRegion: SupportedRegion) => {
+    setRegion(nextRegion);
+    setLocation(null);
+    setAddress('');
+    setSearchResults([]);
+    setLocationError(null);
+  };
   const useCurrentLocation = () => {
     setLocationError(null);
     if (!navigator.geolocation) {
@@ -75,7 +95,7 @@ export function SavedPlacesSection() {
       return;
     }
     navigator.geolocation.getCurrentPosition(
-      (position) => setLocation({ lng: position.coords.longitude, lat: position.coords.latitude }),
+      (position) => selectLocation({ lng: position.coords.longitude, lat: position.coords.latitude }),
       () => setLocationError('위치 권한을 허용하거나 지도에서 위치를 선택해 주세요.'),
       { enableHighAccuracy: true, timeout: 10_000, maximumAge: 30_000 },
     );
@@ -113,7 +133,7 @@ export function SavedPlacesSection() {
                 <div>
                   <div className="saved-place-title">
                     <strong>{place.name}</strong>
-                    {place.preferRiverside && <span className="river-badge">한강 선호</span>}
+                    {place.preferRiverside && <span className="river-badge">강변 선호</span>}
                   </div>
                   <small>
                     {place.distancesKm.join(' · ')}km · {place.shapes.map((shape) => shapeOptions.find((item) => item.value === shape)?.label).join(' · ')}
@@ -151,7 +171,12 @@ export function SavedPlacesSection() {
 
       <div className="saved-place-editor">
         <div className="saved-place-map-wrap">
-          <CourseMap start={location} onMapClick={setLocation} className="saved-place-map" />
+          <CourseMap
+            center={regions[region].center}
+            start={location}
+            onMapClick={selectLocation}
+            className="saved-place-map"
+          />
           <div className="map-hint map-hint-actions">
             <span>{location ? `${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}` : '지도를 클릭해 위치를 정하세요.'}</span>
             <button type="button" className="button ghost compact" onClick={useCurrentLocation}>현재 위치</button>
@@ -165,13 +190,26 @@ export function SavedPlacesSection() {
           }}
         >
           <label>
+            도시
+            <select value={region} onChange={(event) => changeRegion(event.target.value as SupportedRegion)}>
+              {regionOptions.map((item) => (
+                <option value={item.code} key={item.code}>{item.label}</option>
+              ))}
+            </select>
+          </label>
+          <label>
             장소 이름
             <input value={name} maxLength={80} onChange={(event) => setName(event.target.value)} />
           </label>
           <label>주소 검색</label>
           <div className="inline-input">
             <input value={address} onChange={(event) => setAddress(event.target.value)} placeholder="집 근처 공원 또는 지하철역" />
-            <button type="button" className="button secondary" disabled={geocode.isPending || address.length < 2} onClick={() => geocode.mutate(address)}>검색</button>
+            <button
+              type="button"
+              className="button secondary"
+              disabled={geocode.isPending || address.length < 2}
+              onClick={() => geocode.mutate({ query: address, selectedRegion: region })}
+            >검색</button>
           </div>
           {searchResults.length > 0 && (
             <div className="search-results">
@@ -180,7 +218,7 @@ export function SavedPlacesSection() {
                   type="button"
                   key={`${result.lat}-${result.lng}`}
                   onClick={() => {
-                    setLocation({ lat: result.lat, lng: result.lng });
+                    selectLocation({ lat: result.lat, lng: result.lng });
                     setAddress(result.displayName);
                     setSearchResults([]);
                   }}
@@ -224,7 +262,7 @@ export function SavedPlacesSection() {
           </fieldset>
           <label className="check-row river-option">
             <input type="checkbox" checked={preferRiverside} onChange={(event) => setPreferRiverside(event.target.checked)} />
-            <span><strong>한강·강변 강하게 선호</strong><small>한강 공원과 강변 보행로를 우선하고 터널·트랙은 피합니다.</small></span>
+            <span><strong>강변 경로 강하게 선호</strong><small>서울 한강과 청주 무심천 주변 보행로를 우선합니다.</small></span>
           </label>
           {locationError && <div className="alert warning">{locationError}</div>}
           {(create.isError || geocode.isError || regenerate.isError || remove.isError) && (

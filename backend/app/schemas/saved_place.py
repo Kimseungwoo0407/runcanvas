@@ -7,7 +7,7 @@ from pydantic import Field, field_validator, model_validator
 
 from app.schemas.common import APIModel, LngLatModel
 
-PrecomputeShape = Literal["circle", "heart", "star", "square"]
+PrecomputeShape = Literal["circle", "heart", "star", "square", "dog", "cat"]
 
 
 def _default_shapes() -> list[PrecomputeShape]:
@@ -31,7 +31,7 @@ class SavedPlaceCreateRequest(APIModel):
         default_factory=lambda: [3.0, 5.0, 7.0, 10.0], min_length=1, max_length=4
     )
     shapes: list[PrecomputeShape] = Field(
-        default_factory=_default_shapes, min_length=1, max_length=4
+        default_factory=_default_shapes, min_length=1, max_length=6
     )
 
     @field_validator("distances_km")
@@ -54,7 +54,7 @@ class SavedPlacePatchRequest(APIModel):
     privacy_radius_m: int | None = Field(default=None, ge=0, le=1000)
     prefer_riverside: bool | None = None
     distances_km: list[float] | None = Field(default=None, min_length=1, max_length=4)
-    shapes: list[PrecomputeShape] | None = Field(default=None, min_length=1, max_length=4)
+    shapes: list[PrecomputeShape] | None = Field(default=None, min_length=1, max_length=6)
 
     @field_validator("distances_km")
     @classmethod

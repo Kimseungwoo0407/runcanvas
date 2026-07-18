@@ -10,7 +10,7 @@ from app.services.shapes.freehand import normalize_freehand
 from app.services.shapes.library import generate_shape, resample_by_length
 
 
-@pytest.mark.parametrize("shape", ["heart", "star", "circle", "square"])
+@pytest.mark.parametrize("shape", ["heart", "star", "circle", "square", "dog", "cat"])
 def test_shapes_are_finite_closed_and_normalized(shape: str) -> None:
     points = generate_shape(shape, preview_count=64)
     assert len(points) == 65

@@ -4,6 +4,7 @@ import type { Feature, LineString } from 'geojson';
 import type { GeoJSONLineString, LngLat } from '../types/api';
 
 interface Props {
+  center?: LngLat | null;
   start?: LngLat | null;
   route?: GeoJSONLineString | null;
   sourceShape?: GeoJSONLineString | null;
@@ -67,6 +68,7 @@ function setGeoJson(map: MapLibreMap, id: string, data: GeoJSONLineString | null
 }
 
 export function CourseMap({
+  center,
   start,
   route,
   sourceShape,
@@ -86,6 +88,7 @@ export function CourseMap({
   const onRouteClickRef = useRef(onRouteClick);
   const routeRef = useRef(route);
   const editableRef = useRef(editable);
+  const initialCenterRef = useRef(center ?? start ?? { lng: 127.1001, lat: 37.5133 });
 
   useEffect(() => {
     onMapClickRef.current = onMapClick;
@@ -99,7 +102,7 @@ export function CourseMap({
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: styleUrl,
-      center: [127.1001, 37.5133],
+      center: [initialCenterRef.current.lng, initialCenterRef.current.lat],
       zoom: 12,
       attributionControl: false,
     });
@@ -129,6 +132,12 @@ export function CourseMap({
       mapRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !center || start || route) return;
+    map.easeTo({ center: [center.lng, center.lat], zoom: 12 });
+  }, [center, route, start]);
 
   useEffect(() => {
     const map = mapRef.current;

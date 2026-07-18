@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.config import Settings
 from app.db.models import GenerationJob
 from app.errors import AppError
+from app.regions import get_region, supported_region_details
 from app.repositories.jobs import JobRepository
 from app.schemas.common import GeoJSONLineString
 from app.schemas.generation import (
@@ -40,13 +41,17 @@ class GenerationService:
         self.repository = JobRepository(db)
 
     def create(self, owner_id: str, request: GenerationRequest) -> GenerationJobResponse:
-        min_lng, min_lat, max_lng, max_lat = self.settings.SUPPORTED_BBOX
-        if not (min_lng <= request.start.lng <= max_lng and min_lat <= request.start.lat <= max_lat):
+        region = get_region(request.region)
+        if not region.contains(request.start.lng, request.start.lat):
             raise AppError(
                 "OUTSIDE_SUPPORTED_AREA",
-                "현재 지원 지역은 서울입니다.",
+                f"출발점을 {region.label} 지원 범위 안에서 선택해 주세요.",
                 422,
-                {"supportedBbox": list(self.settings.SUPPORTED_BBOX)},
+                {
+                    "selectedRegion": region.code,
+                    "supportedBbox": list(region.bbox),
+                    "supportedRegions": supported_region_details(),
+                },
             )
         if self.repository.active_for_owner(owner_id):
             raise AppError("RATE_LIMITED", "사용자당 생성 작업은 한 번에 하나만 실행할 수 있습니다.", 429)
@@ -94,6 +99,16 @@ class GenerationService:
                     waypoints=candidate.waypoints_json,
                     snapped_points=candidate.snapped_points_json,
                     metrics=CandidateMetrics.model_validate(candidate.metrics_json),
+                    is_best_effort=abs(
+                        float(candidate.metrics_json["distanceM"])
+                        - float(job.request_json["targetDistanceKm"]) * 1000
+                    )
+                    > (
+                        float(job.request_json["targetDistanceKm"])
+                        * 1000
+                        * float(job.request_json.get("distanceTolerancePct", 12))
+                        / 100
+                    ),
                 )
                 for candidate in job.candidates
             ]

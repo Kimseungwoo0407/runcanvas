@@ -5,9 +5,10 @@ from typing import Literal
 
 from pydantic import Field, model_validator
 
+from app.regions import RegionCode
 from app.schemas.common import APIModel, GeoJSONLineString, LngLatModel
 
-ShapeType = Literal["heart", "star", "circle", "square", "letter", "freehand"]
+ShapeType = Literal["heart", "star", "circle", "square", "dog", "cat", "letter", "freehand"]
 
 
 class RoutePreferences(APIModel):
@@ -17,6 +18,7 @@ class RoutePreferences(APIModel):
 
 
 class GenerationRequest(APIModel):
+    region: RegionCode = "seoul"
     start: LngLatModel
     shape_type: ShapeType
     target_distance_km: float = Field(ge=1, le=30)
@@ -80,6 +82,7 @@ class CandidateResponse(APIModel):
     waypoints: list[list[float]]
     snapped_points: list[list[float]]
     metrics: CandidateMetrics
+    is_best_effort: bool
 
 
 class CandidateListResponse(APIModel):

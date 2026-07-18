@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-# A deliberately broad corridor around the Han River and its riverside parks in Seoul.
-# GraphHopper uses this request-scoped custom area only when the user enables riverside preference.
-HAN_RIVER_CORRIDOR: dict[str, Any] = {
+# Deliberately broad corridors around the Han River in Seoul and Musimcheon in Cheongju.
+# GraphHopper uses these request-scoped custom areas only when riverside preference is enabled.
+RIVERSIDE_CORRIDORS: dict[str, Any] = {
     "type": "FeatureCollection",
     "features": [
         {
@@ -43,6 +43,36 @@ HAN_RIVER_CORRIDOR: dict[str, Any] = {
                     ]
                 ],
             },
-        }
+        },
+        {
+            "type": "Feature",
+            "id": "musimcheon_corridor",
+            "properties": {"id": "musimcheon_corridor", "name": "청주 무심천 강변 권역"},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [127.466, 36.480],
+                        [127.468, 36.535],
+                        [127.474, 36.585],
+                        [127.480, 36.625],
+                        [127.486, 36.665],
+                        [127.493, 36.710],
+                        [127.502, 36.775],
+                        [127.526, 36.772],
+                        [127.516, 36.708],
+                        [127.509, 36.663],
+                        [127.503, 36.622],
+                        [127.497, 36.582],
+                        [127.491, 36.532],
+                        [127.490, 36.480],
+                        [127.466, 36.480],
+                    ]
+                ],
+            },
+        },
     ],
 }
+
+# Backward-compatible import name for older callers.
+HAN_RIVER_CORRIDOR = RIVERSIDE_CORRIDORS

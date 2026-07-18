@@ -4,7 +4,7 @@ from app.services.routing.base import RouteOptions
 from app.services.routing.graphhopper import GraphHopperRoutingProvider
 
 
-def test_riverside_custom_model_adds_han_river_area_and_safer_edges() -> None:
+def test_riverside_custom_model_adds_seoul_and_cheongju_areas_and_safer_edges() -> None:
     model = GraphHopperRoutingProvider._custom_model(RouteOptions(prefer_riverside=True))
 
     assert model is not None
@@ -12,6 +12,8 @@ def test_riverside_custom_model_adds_han_river_area_and_safer_edges() -> None:
     priority = model["priority"]
     assert isinstance(priority, list)
     conditions = [rule["if"] for rule in priority]
-    assert "!in_han_river_corridor" in conditions
+    feature_ids = {feature["id"] for feature in model["areas"]["features"]}  # type: ignore[index]
+    assert feature_ids == {"han_river_corridor", "musimcheon_corridor"}
+    assert "!in_han_river_corridor && !in_musimcheon_corridor" in conditions
     assert "road_environment == TUNNEL" in conditions
     assert "road_class == TRACK" in conditions

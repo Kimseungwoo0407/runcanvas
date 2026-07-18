@@ -99,6 +99,12 @@ export function JobPage() {
             <div className="map-overlay-label">후보 {selected.rank} · {Math.round(selected.rotationDeg)}°</div>
           </div>
           <aside className="candidate-sidebar">
+            {selected.isBestEffort && (
+              <div className="alert warning">
+                목표 거리와 차이가 있지만, 이 위치에서 만들 수 있는 가장 가까운 보행 코스입니다.
+                실제 거리는 {formatDistance(selected.metrics.distanceM)}입니다.
+              </div>
+            )}
             <MetricsGrid metrics={selected.metrics} />
             <label>
               저장할 코스 이름
@@ -120,7 +126,7 @@ export function JobPage() {
             className={`candidate-card ${selected?.candidateId === candidate.candidateId ? 'active' : ''}`}
             onClick={() => setSelectedId(candidate.candidateId)}
           >
-            <span>후보 {candidate.rank}</span>
+            <span>후보 {candidate.rank}{candidate.isBestEffort ? ' · 최선 후보' : ''}</span>
             <strong>{formatScore(candidate.metrics.totalScore)}</strong>
             <small>{formatDistance(candidate.metrics.distanceM)} · 중복 {(candidate.metrics.overlapRatio * 100).toFixed(1)}%</small>
           </button>

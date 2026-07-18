@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { previewShape, svgPath } from './shapes';
 
 describe('previewShape', () => {
-  it.each(['heart', 'star', 'circle', 'square'] as const)('creates a finite closed %s shape', (shape) => {
+  it.each(['heart', 'star', 'circle', 'square', 'dog', 'cat'] as const)('creates a finite closed %s shape', (shape) => {
     const points = previewShape(shape);
     expect(points.length).toBeGreaterThan(4);
     expect(points.every(([x, y]) => Number.isFinite(x) && Number.isFinite(y))).toBe(true);

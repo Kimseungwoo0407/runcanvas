@@ -60,8 +60,15 @@ export function LoginPage() {
               value={username}
               onChange={(event) => setUsername(event.target.value)}
               minLength={3}
+              maxLength={40}
+              pattern="[A-Za-z0-9_.-]{3,40}"
+              title="영문, 숫자, 밑줄(_), 마침표(.), 하이픈(-)만 3~40자로 입력해 주세요."
+              aria-describedby={mode === 'register' ? 'username-guide' : undefined}
               required
             />
+            {mode === 'register' && (
+              <small id="username-guide">영문·숫자·밑줄(_), 마침표(.), 하이픈(-)만 3~40자</small>
+            )}
           </label>
           <label>
             비밀번호
@@ -71,13 +78,22 @@ export function LoginPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               minLength={mode === 'register' ? 8 : 1}
+              maxLength={128}
+              aria-describedby={mode === 'register' ? 'password-guide' : undefined}
               required
             />
+            {mode === 'register' && <small id="password-guide">8~128자로 입력해 주세요.</small>}
           </label>
           {mode === 'register' && (
             <label>
               초대 코드
-              <input value={inviteCode} onChange={(event) => setInviteCode(event.target.value)} required />
+              <input
+                value={inviteCode}
+                onChange={(event) => setInviteCode(event.target.value)}
+                minLength={8}
+                maxLength={64}
+                required
+              />
             </label>
           )}
           {mutation.isError && <div className="alert error">{errorMessage(mutation.error)}</div>}

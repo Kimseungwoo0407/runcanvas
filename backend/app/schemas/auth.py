@@ -17,7 +17,9 @@ class RegisterRequest(APIModel):
     def validate_username(cls, value: str) -> str:
         value = value.strip()
         if not USERNAME_RE.fullmatch(value):
-            raise ValueError("username must use 3-40 letters, numbers, dot, hyphen or underscore")
+            raise ValueError(
+                "사용자명은 영문자, 숫자, 마침표(.), 하이픈(-), 밑줄(_)만 사용해 3~40자로 입력해 주세요."
+            )
         return value
 
 

@@ -1,5 +1,5 @@
 graphhopper:
-  datareader.file: /data/seoul.osm.pbf
+  datareader.file: /data/supported-regions.osm.pbf
   graph.location: /data/graph-cache
 
   profiles:

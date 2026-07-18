@@ -22,7 +22,14 @@ from app.services.routing.factory import get_routing_provider
 logger = structlog.get_logger()
 stop_requested = False
 
-SHAPE_NAMES = {"circle": "원", "heart": "하트", "star": "별", "square": "사각형"}
+SHAPE_NAMES = {
+    "circle": "원",
+    "heart": "하트",
+    "star": "별",
+    "square": "사각형",
+    "dog": "강아지 얼굴",
+    "cat": "고양이 얼굴",
+}
 
 
 def route_bbox(coordinates: list[list[float]]) -> list[float]:

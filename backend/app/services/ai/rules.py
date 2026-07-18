@@ -16,6 +16,12 @@ SHAPES: dict[str, ShapeType] = {
     "사각형": "square",
     "네모": "square",
     "square": "square",
+    "강아지": "dog",
+    "개 얼굴": "dog",
+    "dog": "dog",
+    "고양이": "cat",
+    "냥이": "cat",
+    "cat": "cat",
     "글자": "letter",
     "letter": "letter",
     "자유": "freehand",
@@ -39,7 +45,7 @@ def parse_rules(text: str) -> ParsedRequest | None:
         return None
     avoid_major = not any(phrase in lowered for phrase in ["큰길 상관", "대로 선호", "큰길로"])
     prefer_footways = any(phrase in lowered for phrase in ["산책로", "보행로", "공원길", "조용한 길"])
-    prefer_riverside = any(phrase in lowered for phrase in ["한강", "강변", "강가", "river", "riverside"])
+    prefer_riverside = any(phrase in lowered for phrase in ["한강", "무심천", "강변", "강가", "river", "riverside"])
     location_match = LOCATION_RE.search(text)
     location = location_match.group("location").strip() if location_match else None
     return ParsedRequest(

@@ -52,9 +52,24 @@ def candidate_rotations(request: GenerationRequest) -> list[float]:
     return [float(value) for value in range(0, 360, 45)]
 
 
-def _deduplicate(candidates: list[Candidate], limit: int) -> list[Candidate]:
+def _deduplicate(
+    candidates: list[Candidate],
+    limit: int,
+    *,
+    best_effort_target_m: float | None = None,
+) -> list[Candidate]:
     selected: list[Candidate] = []
-    for candidate in sorted(candidates, key=lambda item: item.metrics.total_score, reverse=True):
+    if best_effort_target_m is None:
+        ordered = sorted(candidates, key=lambda item: item.metrics.total_score, reverse=True)
+    else:
+        ordered = sorted(
+            candidates,
+            key=lambda item: (
+                abs(item.route.distance_m - best_effort_target_m),
+                -item.metrics.total_score,
+            ),
+        )
+    for candidate in ordered:
         too_similar = any(
             abs(candidate.rotation_deg - prior.rotation_deg) < 4
             and abs(candidate.route.distance_m - prior.route.distance_m) < 100
@@ -134,8 +149,7 @@ async def optimize_candidates(
                 request.distance_tolerance_pct,
                 len(waypoints),
             )
-            if metrics.distance_score > 0:
-                candidates.append(Candidate(rotation, scale, source_shape, waypoints, route, metrics))
+            candidates.append(Candidate(rotation, scale, source_shape, waypoints, route, metrics))
             ratio = target_m / max(route.distance_m, 1)
             if abs(1 - ratio) < 0.02:
                 if progress_callback:
@@ -147,13 +161,23 @@ async def optimize_candidates(
         if budget.exhausted():
             break
 
-    selected = _deduplicate(candidates, request.max_candidates)
+    tolerance_m = target_m * request.distance_tolerance_pct / 100
+    within_tolerance = [
+        candidate
+        for candidate in candidates
+        if abs(candidate.route.distance_m - target_m) <= tolerance_m
+    ]
+    selected = _deduplicate(
+        within_tolerance or candidates,
+        request.max_candidates,
+        best_effort_target_m=None if within_tolerance else target_m,
+    )
     if not selected:
         if budget.exhausted() and time.monotonic() >= budget.deadline:
             raise AppError("GENERATION_TIMEOUT", "후보 생성 제한 시간이 초과되었습니다.", 504)
         raise AppError(
             "NO_ROUTE_FOUND",
-            "허용 거리 범위 안의 보행 코스를 만들지 못했습니다.",
+            "이 위치에서 연결 가능한 보행 코스를 찾지 못했습니다.",
             422,
             {"routingCalls": budget.calls},
         )

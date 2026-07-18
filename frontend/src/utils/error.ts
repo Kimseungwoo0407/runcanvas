@@ -4,7 +4,7 @@ const friendly: Record<string, string> = {
   ROUTING_UNAVAILABLE: '라우팅 엔진이 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.',
   NO_ROUTE_FOUND: '해당 위치와 거리에서 보행 가능한 그림 코스를 만들지 못했습니다.',
   GENERATION_TIMEOUT: '생성 시간이 초과되었습니다. 거리나 경유점 수를 줄여 주세요.',
-  OUTSIDE_SUPPORTED_AREA: '현재 지원 지역은 서울입니다.',
+  OUTSIDE_SUPPORTED_AREA: '출발점을 선택한 도시(서울 또는 청주)의 지원 범위 안에서 골라 주세요.',
   RATE_LIMITED: '요청이 너무 빠릅니다. 잠시 후 다시 시도해 주세요.',
 };
 

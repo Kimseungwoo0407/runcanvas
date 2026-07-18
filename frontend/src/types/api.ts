@@ -1,4 +1,5 @@
-export type ShapeType = 'heart' | 'star' | 'circle' | 'square' | 'letter' | 'freehand';
+export type ShapeType = 'heart' | 'star' | 'circle' | 'square' | 'dog' | 'cat' | 'letter' | 'freehand';
+export type SupportedRegion = 'seoul' | 'cheongju';
 
 export interface User {
   id: string;
@@ -34,6 +35,7 @@ export interface RoutePreferences {
 }
 
 export interface GenerationRequest {
+  region: SupportedRegion;
   start: LngLat;
   shapeType: ShapeType;
   targetDistanceKm: number;
@@ -83,6 +85,7 @@ export interface Candidate {
   waypoints: number[][];
   snappedPoints: number[][];
   metrics: CandidateMetrics;
+  isBestEffort: boolean;
 }
 
 export interface CourseSummary {
@@ -150,7 +153,7 @@ export interface RoutingHealth {
   profiles?: unknown[];
 }
 
-export type PrecomputeShape = 'circle' | 'heart' | 'star' | 'square';
+export type PrecomputeShape = 'circle' | 'heart' | 'star' | 'square' | 'dog' | 'cat';
 
 export interface PrecomputeStatus {
   total: number;

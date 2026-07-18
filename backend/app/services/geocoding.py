@@ -9,17 +9,24 @@ from sqlalchemy.orm import Session
 from app.config import Settings
 from app.db.models import GeocodingCache
 from app.errors import AppError
+from app.regions import RegionCode, get_region
 from app.schemas.geocoding import GeocodingResponse, GeocodingResult
 
 _rate_lock = asyncio.Lock()
 _last_call = 0.0
 
 
-async def search_geocoding(db: Session, settings: Settings, query: str) -> GeocodingResponse:
+async def search_geocoding(
+    db: Session,
+    settings: Settings,
+    query: str,
+    region_code: RegionCode | None = None,
+) -> GeocodingResponse:
     normalized = " ".join(query.strip().lower().split())
     if len(normalized) < 2:
         raise AppError("VALIDATION_ERROR", "검색어를 두 글자 이상 입력해 주세요.", 422)
-    cached = db.get(GeocodingCache, normalized)
+    cache_key = f"{region_code or 'all'}:{normalized}"
+    cached = db.get(GeocodingCache, cache_key)
     now = datetime.now(UTC)
     if cached is not None:
         expires = cached.expires_at.replace(tzinfo=UTC) if cached.expires_at.tzinfo is None else cached.expires_at
@@ -34,9 +41,23 @@ async def search_geocoding(db: Session, settings: Settings, query: str) -> Geoco
             await asyncio.sleep(wait)
         try:
             async with httpx.AsyncClient(timeout=5) as client:
+                params: dict[str, str | int] = {
+                    "q": query,
+                    "format": "jsonv2",
+                    "limit": 5,
+                    "countrycodes": "kr",
+                }
+                if region_code is not None:
+                    min_lng, min_lat, max_lng, max_lat = get_region(region_code).bbox
+                    params.update(
+                        {
+                            "viewbox": f"{min_lng},{max_lat},{max_lng},{min_lat}",
+                            "bounded": 1,
+                        }
+                    )
                 response = await client.get(
                     f"{settings.NOMINATIM_URL.rstrip('/')}/search",
-                    params={"q": query, "format": "jsonv2", "limit": 5, "countrycodes": "kr"},
+                    params=params,
                     headers={"User-Agent": settings.NOMINATIM_USER_AGENT},
                 )
                 response.raise_for_status()
@@ -54,7 +75,7 @@ async def search_geocoding(db: Session, settings: Settings, query: str) -> Geoco
     ]
     payload = [item.model_dump(by_alias=True) for item in items]
     if cached is None:
-        cached = GeocodingCache(query_key=normalized, response_json=payload, expires_at=now + timedelta(days=30))
+        cached = GeocodingCache(query_key=cache_key, response_json=payload, expires_at=now + timedelta(days=30))
         db.add(cached)
     else:
         cached.response_json = payload

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.config import Settings
 from app.db.models import SavedPlace
 from app.errors import AppError
+from app.regions import region_for_point, supported_region_details
 from app.repositories.jobs import JobRepository
 from app.repositories.saved_places import SavedPlaceRepository
 from app.schemas.common import LngLatModel
@@ -34,13 +35,12 @@ class SavedPlaceService:
         self.jobs = JobRepository(db)
 
     def _validate_location(self, location: LngLatModel) -> None:
-        min_lng, min_lat, max_lng, max_lat = self.settings.SUPPORTED_BBOX
-        if not (min_lng <= location.lng <= max_lng and min_lat <= location.lat <= max_lat):
+        if region_for_point(location.lng, location.lat) is None:
             raise AppError(
                 "OUTSIDE_SUPPORTED_AREA",
-                "현재 지원 지역은 서울입니다.",
+                "현재 지원 지역은 서울과 청주입니다.",
                 422,
-                {"supportedBbox": list(self.settings.SUPPORTED_BBOX)},
+                {"supportedRegions": supported_region_details()},
             )
 
     def _response(self, place: SavedPlace) -> SavedPlaceResponse:
@@ -74,7 +74,10 @@ class SavedPlaceService:
         lat = place.lat + math.sin(angle) * radius / 111_320
         lng_scale = max(0.2, math.cos(math.radians(place.lat)))
         lng = place.lng + math.cos(angle) * radius / (111_320 * lng_scale)
-        min_lng, min_lat, max_lng, max_lat = self.settings.SUPPORTED_BBOX
+        region = region_for_point(place.lng, place.lat)
+        if region is None:
+            raise AppError("OUTSIDE_SUPPORTED_AREA", "현재 지원 지역은 서울과 청주입니다.", 422)
+        min_lng, min_lat, max_lng, max_lat = region.bbox
         return LngLatModel(
             lng=max(min_lng + 0.00001, min(max_lng - 0.00001, lng)),
             lat=max(min_lat + 0.00001, min(max_lat - 0.00001, lat)),
@@ -85,9 +88,13 @@ class SavedPlaceService:
         batch_id = str(uuid4())
         place.precompute_batch_id = batch_id
         place.precompute_requested_at = datetime.now(UTC)
+        region = region_for_point(place.lng, place.lat)
+        if region is None:
+            raise AppError("OUTSIDE_SUPPORTED_AREA", "현재 지원 지역은 서울과 청주입니다.", 422)
         for distance_km in place.distances_json:
             for shape in place.shapes_json:
                 request = GenerationRequest(
+                    region=region.code,
                     start=self._offset_start(place, shape, float(distance_km)),
                     shape_type=cast(PrecomputeShape, shape),
                     target_distance_km=float(distance_km),

@@ -7,14 +7,15 @@ import { z } from 'zod';
 import { aiApi, generationApi, geocodingApi } from '../api/endpoints';
 import { FreehandCanvas } from '../components/FreehandCanvas';
 import { ShapePreview } from '../components/ShapePreview';
+import { inferRegion, isPointInRegion, regionOptions, regions } from '../config/regions';
 import { CourseMap } from '../map/CourseMap';
-import type { GeocodingResult, GenerationRequest, LngLat, ShapeType } from '../types/api';
+import type { GeocodingResult, GenerationRequest, LngLat, ShapeType, SupportedRegion } from '../types/api';
 import { errorMessage } from '../utils/error';
 
 const supportedLetters = /^[ACHMRSU]{1,3}$/;
 const schema = z
   .object({
-    shapeType: z.enum(['heart', 'star', 'circle', 'square', 'letter', 'freehand']),
+    shapeType: z.enum(['heart', 'star', 'circle', 'square', 'dog', 'cat', 'letter', 'freehand']),
     shapeText: z.string().max(3),
     targetDistanceKm: z.coerce.number().min(1).max(30),
     distanceTolerancePct: z.coerce.number().min(5).max(25),
@@ -52,6 +53,7 @@ const defaultFormValues: FormInput = {
 const builderDraftKey = 'runcanvas.builder-draft.v1';
 
 interface BuilderDraft {
+  region: SupportedRegion;
   start: LngLat;
   freehandPoints: number[][];
   address: string;
@@ -67,6 +69,9 @@ function readBuilderDraft(): BuilderDraft | null {
     const parsedForm = schema.safeParse(draft.formValues);
     if (!parsedForm.success) return null;
     return {
+      region: draft.region === 'cheongju' || draft.region === 'seoul'
+        ? draft.region
+        : inferRegion(draft.start) ?? 'seoul',
       start: draft.start,
       freehandPoints: Array.isArray(draft.freehandPoints) ? draft.freehandPoints : [],
       address: typeof draft.address === 'string' ? draft.address : '',
@@ -83,6 +88,8 @@ const shapes: { value: ShapeType; label: string }[] = [
   { value: 'star', label: '별' },
   { value: 'circle', label: '원' },
   { value: 'square', label: '사각형' },
+  { value: 'dog', label: '강아지 얼굴' },
+  { value: 'cat', label: '고양이 얼굴' },
   { value: 'letter', label: '글자' },
   { value: 'freehand', label: '직접 그리기' },
 ];
@@ -90,7 +97,8 @@ const shapes: { value: ShapeType; label: string }[] = [
 export function BuilderPage() {
   const navigate = useNavigate();
   const [initialDraft] = useState(readBuilderDraft);
-  const [start, setStart] = useState<LngLat>(initialDraft?.start ?? { lng: 127.1001, lat: 37.5133 });
+  const [region, setRegion] = useState<SupportedRegion>(initialDraft?.region ?? 'seoul');
+  const [start, setStart] = useState<LngLat>(initialDraft?.start ?? regions.seoul.center);
   const [freehandPoints, setFreehandPoints] = useState<number[][]>(initialDraft?.freehandPoints ?? []);
   const [address, setAddress] = useState(initialDraft?.address ?? '');
   const [searchResults, setSearchResults] = useState<GeocodingResult[]>([]);
@@ -110,17 +118,18 @@ export function BuilderPage() {
       try {
         window.localStorage.setItem(
           builderDraftKey,
-          JSON.stringify({ start, freehandPoints, address, naturalText, formValues }),
+          JSON.stringify({ region, start, freehandPoints, address, naturalText, formValues }),
         );
       } catch {
         // Storage may be unavailable in a private browser window; the form still works in memory.
       }
     }, 100);
     return () => window.clearTimeout(timeout);
-  }, [address, formValues, freehandPoints, naturalText, start]);
+  }, [address, formValues, freehandPoints, naturalText, region, start]);
 
   const geocode = useMutation({
-    mutationFn: geocodingApi.search,
+    mutationFn: ({ query, selectedRegion }: { query: string; selectedRegion: SupportedRegion }) =>
+      geocodingApi.search(query, selectedRegion),
     onSuccess: (data) => setSearchResults(data.items),
   });
   const parse = useMutation({
@@ -142,6 +151,23 @@ export function BuilderPage() {
 
   const startLabel = useMemo(() => `${start.lat.toFixed(5)}, ${start.lng.toFixed(5)}`, [start]);
 
+  const selectStart = (point: LngLat) => {
+    if (!isPointInRegion(point, region)) {
+      setLocationError(`${regions[region].label} 지원 범위 안에서 출발점을 선택해 주세요.`);
+      return;
+    }
+    setLocationError(null);
+    setStart(point);
+  };
+
+  const changeRegion = (nextRegion: SupportedRegion) => {
+    setRegion(nextRegion);
+    setStart(regions[nextRegion].center);
+    setAddress('');
+    setSearchResults([]);
+    setLocationError(null);
+  };
+
   const useCurrentLocation = () => {
     setLocationError(null);
     if (!navigator.geolocation) {
@@ -150,7 +176,7 @@ export function BuilderPage() {
     }
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setStart({ lng: position.coords.longitude, lat: position.coords.latitude });
+        selectStart({ lng: position.coords.longitude, lat: position.coords.latitude });
       },
       () => setLocationError('위치 권한을 허용하거나 지도에서 출발점을 선택해 주세요.'),
       { enableHighAccuracy: true, timeout: 10_000, maximumAge: 30_000 },
@@ -159,6 +185,7 @@ export function BuilderPage() {
 
   const submit = form.handleSubmit((values) => {
     const payload: GenerationRequest = {
+      region,
       start,
       shapeType: values.shapeType,
       targetDistanceKm: values.targetDistanceKm,
@@ -195,7 +222,7 @@ export function BuilderPage() {
 
       <div className="builder-grid">
         <div className="builder-map-panel">
-          <CourseMap start={start} onMapClick={setStart} />
+          <CourseMap center={regions[region].center} start={start} onMapClick={selectStart} />
           <div className="map-hint map-hint-actions">
             <span>지도를 클릭해 출발점을 이동하세요 · {startLabel}</span>
             <button type="button" className="button ghost compact" onClick={useCurrentLocation}>
@@ -206,6 +233,20 @@ export function BuilderPage() {
         </div>
 
         <form className="builder-form" onSubmit={submit}>
+          <div className="form-section">
+            <label htmlFor="region">도시 선택</label>
+            <select
+              id="region"
+              value={region}
+              onChange={(event) => changeRegion(event.target.value as SupportedRegion)}
+            >
+              {regionOptions.map((item) => (
+                <option value={item.code} key={item.code}>{item.label}</option>
+              ))}
+            </select>
+            <small>선택한 도시 안에서 주소와 출발점을 찾습니다.</small>
+          </div>
+
           <div className="form-section natural-input">
             <label htmlFor="natural">한 문장으로 입력</label>
             <div className="inline-input">
@@ -235,7 +276,7 @@ export function BuilderPage() {
                 type="button"
                 className="button secondary"
                 disabled={geocode.isPending || address.length < 2}
-                onClick={() => geocode.mutate(address)}
+                onClick={() => geocode.mutate({ query: address, selectedRegion: region })}
               >
                 검색
               </button>
@@ -247,7 +288,7 @@ export function BuilderPage() {
                     type="button"
                     key={`${result.lat}-${result.lng}`}
                     onClick={() => {
-                      setStart({ lat: result.lat, lng: result.lng });
+                      selectStart({ lat: result.lat, lng: result.lng });
                       setAddress(result.displayName);
                       setSearchResults([]);
                     }}
@@ -343,7 +384,7 @@ export function BuilderPage() {
             </label>
             <label className="check-row">
               <input type="checkbox" {...form.register('preferRiverside')} />
-              한강·강변 강하게 선호
+              강변 경로 강하게 선호
             </label>
           </details>
 
