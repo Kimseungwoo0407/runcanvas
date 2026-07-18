@@ -71,3 +71,19 @@ def test_user_settings_and_password_change(
         json={"username": "settings-runner", "password": "NewRunnerPassword456!"},
     )
     assert new_login.status_code == 200
+
+
+def test_registration_password_minimum_is_eight_characters(
+    client: TestClient, admin_and_invite: tuple[object, str]
+) -> None:
+    too_short = client.post(
+        "/api/v1/auth/register",
+        json={"username": "short-pass", "password": "1234567", "inviteCode": admin_and_invite[1]},
+    )
+    assert too_short.status_code == 422
+
+    accepted = client.post(
+        "/api/v1/auth/register",
+        json={"username": "eight-pass", "password": "12345678", "inviteCode": admin_and_invite[1]},
+    )
+    assert accepted.status_code == 201

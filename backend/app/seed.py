@@ -14,8 +14,8 @@ def main() -> None:
     parser.add_argument("--username", default="admin")
     parser.add_argument("--password", required=True)
     args = parser.parse_args()
-    if len(args.password) < 12:
-        raise SystemExit("password must contain at least 12 characters")
+    if len(args.password) < 8:
+        raise SystemExit("password must contain at least 8 characters")
     Base.metadata.create_all(engine)
     with SessionLocal() as db:
         repository = UserRepository(db)

@@ -133,13 +133,13 @@ export function SettingsPage() {
             새 비밀번호
             <input
               type="password"
-              minLength={12}
+              minLength={8}
               value={newPassword}
               onChange={(event) => setNewPassword(event.target.value)}
             />
           </label>
-          <small>12자 이상으로 설정합니다. 변경 후 모든 세션이 종료됩니다.</small>
-          <button className="button secondary" disabled={password.isPending || newPassword.length < 12}>
+          <small>8자 이상으로 설정합니다. 변경 후 모든 세션이 종료됩니다.</small>
+          <button className="button secondary" disabled={password.isPending || newPassword.length < 8}>
             비밀번호 변경
           </button>
           {password.isError && <div className="alert error">{errorMessage(password.error)}</div>}

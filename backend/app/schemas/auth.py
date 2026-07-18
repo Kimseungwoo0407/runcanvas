@@ -9,7 +9,7 @@ from app.schemas.common import USERNAME_RE, APIModel
 
 class RegisterRequest(APIModel):
     username: str
-    password: str = Field(min_length=12, max_length=128)
+    password: str = Field(min_length=8, max_length=128)
     invite_code: str = Field(min_length=8, max_length=64)
 
     @field_validator("username")

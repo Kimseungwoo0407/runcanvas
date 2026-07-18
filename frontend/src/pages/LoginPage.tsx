@@ -70,7 +70,7 @@ export function LoginPage() {
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              minLength={mode === 'register' ? 12 : 1}
+              minLength={mode === 'register' ? 8 : 1}
               required
             />
           </label>
